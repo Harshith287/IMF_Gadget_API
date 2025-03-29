@@ -14,6 +14,14 @@ const Gadget = sequelize.define('Gadget',{
     status:{
         type:DataTypes.ENUM('Available','Deployed',"Destroyed", "Decommissioned"),
         defaultValue:'Available',
+    },
+    user_id:{
+        type:DataTypes.UUID,
+        allowNull:false,
+        references:{
+            model:'Users',
+            key:'id'
+        }
     }
 })
 

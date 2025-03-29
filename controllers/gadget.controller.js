@@ -4,14 +4,22 @@ import {generateSuccessProbability,generateCodename} from '../util.js';
 export const getGadgets = async(req,res)=>{
     try{
         const {status}=req.query;
-        const gadgets=status?await Gadget.findAll({where:{status}}):await Gadget.findAll();
-        // res.status(200).json({
-        //     success:true,
-        //     message:'Gadgets fetched successfully',
-        //     successProbability:generateSuccessProbability(),
-        //     data:gadgets
-        // }) 
-        res.staus(200).json({
+        const user_id=req.user.id;
+        // console.log(user_id)
+        if (!user_id || typeof user_id !== 'string') {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid user ID',
+            });
+        }
+
+        const gadgets=await Gadget.findAll({where: {
+            user_id: user_id,  
+            ...(status && { status })
+        }});
+
+
+        res.status(200).json({
             success:true,
             message:'Gadgets fetched successfully',
             data:gadgets.map(g => ({ ...g.toJSON(), successProbability: `${generateSuccessProbability()}%` }))});
@@ -25,7 +33,9 @@ export const getGadgets = async(req,res)=>{
 export const createGadget = async(req,res)=>{
     try{
         const {id,name,status}=req.body;
-        const existingGadget=await Gadget.findOne({where:{name}});
+        const user_id=req.user.id;  
+
+        const existingGadget=await Gadget.findOne({where:{name,user_id}});
         if(existingGadget)
         {
             return res.status(400).json({
@@ -33,7 +43,7 @@ export const createGadget = async(req,res)=>{
                 message:'Gadget with this name already exists'
             })
         }
-        const gadget=await Gadget.create({id,name,status});
+        const gadget=await Gadget.create({id,name,status,user_id});
         res.status(201).json({
             success:true,
             message:'Gadget created successfully',
@@ -51,7 +61,8 @@ export const updateGadget = async(req,res)=>{
     try{
         const {name,status}=req.body;
         const {id}=req.params;
-        const gadget = await Gadget.findOne({where:{id}});
+        const user_id=req.user.id;
+        const gadget = await Gadget.findOne({where:{id,user_id}});
         if(!gadget)
         {
             return res.status(400).json({
@@ -59,7 +70,7 @@ export const updateGadget = async(req,res)=>{
                 message:'Gadget not found'
             })
         }
-        await Gadget.update({name,status},{where:{id}});
+        await Gadget.update({name,status},{where:{id,user_id}});
         res.status(200).json({
             success:true,
             message:'Gadget updated successfully',
@@ -74,7 +85,8 @@ export const updateGadget = async(req,res)=>{
 export const deleteGadget = async(req,res)=>{
     try{
         const {id}=req.params;
-        const gadget = await Gadget.findOne({where:{id}});
+        const user_id=req.user.id;
+        const gadget = await Gadget.findOne({where:{id,user_id}});
         if(!gadget)
         {
             return res.status(400).json({
@@ -97,7 +109,8 @@ export const deleteGadget = async(req,res)=>{
 export const getGadget=async(req,res)=>{
     try{
         const {id}=req.params;
-        const gadget=await Gadget.findOne({where:{id}});
+        const user_id=req.user.id;
+        const gadget=await Gadget.findOne({where:{id,user_id}});
         if(!gadget)
         {
             return res.status(400).json({
@@ -120,8 +133,8 @@ export const getGadget=async(req,res)=>{
 export const selfDestructGadget = async (req, res) => {
     try {
       const { id } = req.params;
-  
-      const gadget = await Gadget.findOne({ where: { id } });
+        const user_id = req.user.id;
+      const gadget = await Gadget.findOne({ where: { id, user_id } });
       if (!gadget) {
         return res.status(400).json({
           success: false,
@@ -131,7 +144,7 @@ export const selfDestructGadget = async (req, res) => {
   
       const confirmationCode = Math.floor(1000 + Math.random() * 9000);
 
-      await Gadget.update({ status: "Destroyed" }, { where: { id } });
+      await Gadget.update({ status: "Destroyed" }, { where: { id, user_id } });
       res.status(200).json({
         success: true,
         message: `Gadget self-destructed successfully with confirmation code ${confirmationCode}`,

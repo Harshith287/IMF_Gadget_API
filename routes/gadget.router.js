@@ -7,7 +7,7 @@ gadgetRouter.get('/',authorize,getGadgets);
 gadgetRouter.post('/',authorize,createGadget);
 gadgetRouter.patch('/:id',authorize,updateGadget);
 gadgetRouter.delete('/:id',authorize,deleteGadget);
-gadgetRouter.get('/:id',authorize,getGadget);
+gadgetRouter.get('/:id',authorize,getGadget);   
 gadgetRouter.post('/:id/self-destruct',authorize,selfDestructGadget);
 
 export default gadgetRouter;
